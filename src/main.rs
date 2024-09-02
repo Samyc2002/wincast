@@ -1,4 +1,5 @@
 use clap::Parser;
+use prettytable::{format, row, Attr, Cell, Row, Table, color};
 use sqlite::Connection;
 use std::io;
 
@@ -48,16 +49,28 @@ fn index(db: &Connection) {
 
 fn print_search_results(results: SearchResponse) -> Vec<SearchResults> {
     println!("Matches found: {}/{}", results.matches, results.total);
-    println!("ID\t\t\tNAME\t\t\tTYPE\t\t\tPATH");
+    let mut table = Table::new();
+    let format = format::FormatBuilder::new()
+        .column_separator(' ')
+        .borders(' ')
+        .separators(
+            &[format::LinePosition::Top, format::LinePosition::Bottom],
+            format::LineSeparator::new(' ', ' ', ' ', ' '),
+        )
+        .padding(1, 1)
+        .build();
+    table.set_format(format);
+
+    table.set_titles(Row::new(vec![
+        Cell::new("ID").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("NAME").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("TYPE").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("PATH").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
+    ]));
     for (i, app) in results.search_results.iter().enumerate() {
-        println!(
-            "{}\t\t\t{}\t\t\t{}\t\t\t{}",
-            i + 1,
-            app.name,
-            app.search_type,
-            app.path
-        );
+        table.add_row(row![i + 1, app.name, app.search_type, app.path]);
     }
+    table.printstd();
 
     return results.search_results;
 }
