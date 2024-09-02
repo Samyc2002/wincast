@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 anyhow = "1.0.86"
 clap = { version = "4.5.16", features = ["derive"] }
+colored = "2.1.0"
 opener = "0.7.2"
 prettytable-rs = "0.10.0"
 sqlite = "0.36.1"

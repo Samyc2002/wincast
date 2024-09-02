@@ -1,7 +1,8 @@
-use clap::Parser;
-use prettytable::{format, row, Attr, Cell, Row, Table, color};
-use sqlite::Connection;
 use std::io;
+use sqlite::Connection;
+use prettytable::{color, format, row, Attr, Cell, Row, Table};
+use clap::Parser;
+use colored::*;
 
 pub mod wincast;
 
@@ -21,6 +22,16 @@ fn main() {
     let db = sqlite::open("./db.sqlite").unwrap();
 
     let args = Args::parse();
+
+    println!("{}", "".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓███████▓▒░   ░▒▓██████▓▒░   ░▒▓██████▓▒░   ░▒▓███████▓▒░ ░▒▓████████▓▒░ ".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓████████▓▒░  ░▒▓██████▓▒░     ░▒▓█▓▒░     ".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
+    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
+    println!("{}", "░▒▓█████████████▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓███████▓▒░     ░▒▓█▓▒░     ".red());
+    println!("{}", "".red());
 
     if args.index {
         index(&db);
@@ -62,10 +73,18 @@ fn print_search_results(results: SearchResponse) -> Vec<SearchResults> {
     table.set_format(format);
 
     table.set_titles(Row::new(vec![
-        Cell::new("ID").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("NAME").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("TYPE").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("PATH").with_style(Attr::Bold).with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("ID")
+            .with_style(Attr::Bold)
+            .with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("NAME")
+            .with_style(Attr::Bold)
+            .with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("TYPE")
+            .with_style(Attr::Bold)
+            .with_style(Attr::ForegroundColor(color::GREEN)),
+        Cell::new("PATH")
+            .with_style(Attr::Bold)
+            .with_style(Attr::ForegroundColor(color::GREEN)),
     ]));
     for (i, app) in results.search_results.iter().enumerate() {
         table.add_row(row![i + 1, app.name, app.search_type, app.path]);

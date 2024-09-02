@@ -78,8 +78,9 @@ fn list_installed_apps(query: &str, db: &Connection) -> Result<SearchResponse> {
 
         if file_name.to_lowercase().contains(&query.to_lowercase()) {
             matches += 1;
+            let file_parts: Vec<&str> = file_name.split(".").collect();
             result.push(SearchResults {
-                name: file_name.to_string(),
+                name: file_parts[0].to_string(),
                 path: file.path.to_string(),
                 icon: String::new(),
                 search_type: String::from("app"),
