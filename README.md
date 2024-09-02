@@ -78,7 +78,7 @@ Entering the number under the ID column will launch the corresponding app.
 
 ## Issues and Suggestions
 
-If you encounter any issues or suggestions, please open an issue [from here](https://github.com/Samyc2002/wincast/issues/new) with a `bug` label.
+If you encounter any issues, please open an issue [from here](https://github.com/Samyc2002/wincast/issues/new) with a `bug` label.
 
 If you'd like to have a feature request, please open an issue [from here](https://github.com/Samyc2002/wincast/issues/new) with a `enhancement` label.
 
