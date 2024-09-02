@@ -2,7 +2,6 @@ use clap::Parser;
 use sqlite::Connection;
 use std::io;
 
-pub mod models;
 pub mod wincast;
 
 use wincast::{searchresponse::SearchResponse, searchresults::SearchResults};
