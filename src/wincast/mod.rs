@@ -8,16 +8,20 @@ pub mod searchresults;
 use searchresponse::SearchResponse;
 use searchresults::SearchResults;
 
-pub fn index_apps(db: &Connection) {
-    let app_paths = [
-        "C:\\Users\\samy3\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
-        "C:\\ProgramData\\Microsoft\\Windows\\Start Menu",
+fn get_app_paths() -> Vec<String> {
+    return vec![
+        String::from(format!(
+            "C:\\Users\\{}\\AppData\\Roaming\\Microsoft\\Windows\\Start Menu",
+            whoami::username()
+        )),
+        String::from("C:\\ProgramData\\Microsoft\\Windows\\Start Menu"),
     ];
+}
 
-    db.execute(
-        "DROP TABLE IF EXISTS data",
-    )
-    .unwrap();
+pub fn index_apps(db: &Connection) {
+    let app_paths = get_app_paths();
+
+    db.execute("DROP TABLE IF EXISTS data").unwrap();
     db.execute(
         "CREATE TABLE IF NOT EXISTS data (name TEXT, path TEXT, icon TEXT, search_type TEXT)",
     )
