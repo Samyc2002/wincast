@@ -1,12 +1,24 @@
-use std::io;
-use sqlite::Connection;
-use prettytable::{color, format, row, Attr, Cell, Row, Table};
+use anyhow::Result;
+use app::App;
 use clap::Parser;
-use colored::*;
+use crossterm::{
+    event::{DisableMouseCapture, EnableMouseCapture},
+    execute,
+    terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
+};
+use ratatui::{
+    backend::{Backend, CrosstermBackend},
+    Terminal,
+};
+use std::{error::Error, io};
+use ui::ui;
+use utils::{greet, index, input, launch, print_search_results};
+use wincast::searchresults::SearchResults;
 
+pub mod app;
+pub mod ui;
+pub mod utils;
 pub mod wincast;
-
-use wincast::{searchresponse::SearchResponse, searchresults::SearchResults};
 
 #[derive(Parser, Debug)]
 #[command(version, about, long_about = None)]
@@ -18,108 +30,76 @@ struct Args {
     index: bool,
 }
 
-fn main() {
-    let db = sqlite::open("./db.sqlite").unwrap();
+fn main() -> Result<(), Box<dyn Error>> {
+    // Setup Terminal
+    // enable_raw_mode()?;
+    // let mut stderr = io::stderr();
+    // execute!(stderr, EnterAlternateScreen, EnableMouseCapture)?;
 
-    let args = Args::parse();
+    // Set up the Crossterm Backend
+    // let backend = CrosstermBackend::new(stderr);
+    // let mut terminal = Terminal::new(backend)?;
 
-    println!("{}", "".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓███████▓▒░   ░▒▓██████▓▒░   ░▒▓██████▓▒░   ░▒▓███████▓▒░ ░▒▓████████▓▒░ ".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓████████▓▒░  ░▒▓██████▓▒░     ░▒▓█▓▒░     ".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
-    println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
-    println!("{}", "░▒▓█████████████▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓███████▓▒░     ░▒▓█▓▒░     ".red());
-    println!("{}", "".red());
+    // Create the App Container
+    // let mut app = App::new();
+    // run_app(&mut terminal, &mut app)?;
 
-    if args.index {
-        index(&db);
-    }
-
-    if args.query != "" {
-        let result = wincast::search(&args.query, &db);
-        let mut query_files: Vec<SearchResults> = Vec::new();
-        match result {
-            Ok(apps) => {
-                query_files = print_search_results(apps);
-            }
-            Err(e) => println!("Error: {e}"),
+    // Restore Terminal
+    // disable_raw_mode()?;
+    // execute!(
+    //     terminal.backend_mut(),
+    //     LeaveAlternateScreen,
+    //     DisableMouseCapture
+    // )?;
+    // terminal.show_cursor()?;
+    println!("{}", format!("{}", greet()));
+    index();
+    let query = input();
+    let result = wincast::search(&query[..]);
+    let mut query_files: Vec<SearchResults> = Vec::new();
+    match result {
+        Ok(apps) => {
+            query_files = print_search_results(apps);
         }
-        launch(query_files);
+        Err(e) => println!("Error: {e}"),
+    }
+    launch(query_files);
+
+    return Ok(());
+}
+
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, app: &mut App) -> Result<()> {
+    loop {
+        terminal.draw(|f| ui(f, app))?;
     }
 }
 
-fn index(db: &Connection) {
-    println!("Indexing apps...");
+/* Deprecared Code (kept for future reference)
+let args = Args::parse();
 
-    wincast::index_apps(&db);
+println!("{}", "".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓███████▓▒░   ░▒▓██████▓▒░   ░▒▓██████▓▒░   ░▒▓███████▓▒░ ░▒▓████████▓▒░ ".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░     ".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓████████▓▒░  ░▒▓██████▓▒░     ░▒▓█▓▒░     ".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
+println!("{}", "▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░     ".red());
+println!("{}", "░▒▓█████████████▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓███████▓▒░     ░▒▓█▓▒░     ".red());
+println!("{}", "".red());
 
-    println!("Indexing complete");
+if args.index {
+    index(&db);
 }
 
-fn print_search_results(results: SearchResponse) -> Vec<SearchResults> {
-    println!("Matches found: {}/{}", results.matches, results.total);
-    let mut table = Table::new();
-    let format = format::FormatBuilder::new()
-        .column_separator(' ')
-        .borders(' ')
-        .separators(
-            &[format::LinePosition::Top, format::LinePosition::Bottom],
-            format::LineSeparator::new(' ', ' ', ' ', ' '),
-        )
-        .padding(1, 1)
-        .build();
-    table.set_format(format);
-
-    table.set_titles(Row::new(vec![
-        Cell::new("ID")
-            .with_style(Attr::Bold)
-            .with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("NAME")
-            .with_style(Attr::Bold)
-            .with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("TYPE")
-            .with_style(Attr::Bold)
-            .with_style(Attr::ForegroundColor(color::GREEN)),
-        Cell::new("PATH")
-            .with_style(Attr::Bold)
-            .with_style(Attr::ForegroundColor(color::GREEN)),
-    ]));
-    for (i, app) in results.search_results.iter().enumerate() {
-        table.add_row(row![i + 1, app.name, app.search_type, app.path]);
+if args.query != "" {
+    let result = wincast::search(&args.query, &db);
+    let mut query_files: Vec<SearchResults> = Vec::new();
+    match result {
+        Ok(apps) => {
+            query_files = print_search_results(apps);
+        }
+        Err(e) => println!("Error: {e}"),
     }
-    table.printstd();
-
-    return results.search_results;
+    launch(query_files);
 }
-
-fn launch(files: Vec<SearchResults>) {
-    println!("Enter ID to launch: ");
-    let input = input();
-    let id: usize = input.parse().unwrap();
-
-    if id > files.len() {
-        println!("Invalid ID");
-        return;
-    }
-
-    let file = files.get(id - 1).unwrap();
-
-    let _ = opener::open(file.path.clone());
-}
-
-fn input() -> String {
-    let mut input = String::new();
-
-    let input_res = io::stdin().read_line(&mut input);
-
-    let mut result = String::new();
-
-    match input_res {
-        Ok(_) => result = String::from(input.trim()),
-        Err(e) => println!("Error in input: {e}"),
-    }
-
-    return result;
-}
+Deprecated Code ends here */

@@ -18,7 +18,33 @@ fn get_app_paths() -> Vec<String> {
     ];
 }
 
-pub fn index_apps(db: &Connection) {
+pub fn add_file_path(file_path: &str, label: Option<&str>) {
+    let db = sqlite::open("./db.sqlite").unwrap();
+
+    db.execute("CREATE TABLE IF NOT EXISTS locations (name TEXT, path TEXT)")
+        .unwrap();
+
+    match label {
+        Some(label) => {
+            db.execute(format!(
+                "INSERT INTO locations VALUES ('{}', '{}')",
+                label, file_path
+            ))
+            .unwrap();
+        }
+        None => {
+            db.execute(format!(
+                "INSERT INTO locations VALUES ('{}', '{}')",
+                file_path, file_path
+            ))
+            .unwrap();
+        }
+    }
+}
+
+pub fn index_apps() {
+    let db = sqlite::open("./db.sqlite").unwrap();
+
     let app_paths = get_app_paths();
 
     db.execute("DROP TABLE IF EXISTS data").unwrap();
@@ -46,9 +72,11 @@ pub fn index_apps(db: &Connection) {
     }
 }
 
-pub fn search(query: &str, db: &Connection) -> Result<SearchResponse> {
+pub fn search(query: &str) -> Result<SearchResponse> {
+    let db = sqlite::open("./db.sqlite").unwrap();
+
     // List Installed Apps
-    let apps = list_installed_apps(query, db)?;
+    let apps = list_installed_apps(query, &db)?;
 
     return Ok(apps);
 }
