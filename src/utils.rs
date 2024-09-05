@@ -48,19 +48,8 @@ pub fn print_search_results(results: SearchResponse) -> Vec<SearchResults> {
     return results.search_results;
 }
 
-pub fn launch(files: Vec<SearchResults>) {
-    println!("Enter ID to launch: ");
-    let input = input();
-    let id: usize = input.parse().unwrap();
-
-    if id > files.len() {
-        println!("Invalid ID");
-        return;
-    }
-
-    let file = files.get(id - 1).unwrap();
-
-    let _ = opener::open(file.path.clone());
+pub fn launch(path: String) {
+    let _ = opener::open(path.clone());
 }
 
 pub fn input() -> String {
