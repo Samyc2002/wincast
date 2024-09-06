@@ -129,8 +129,14 @@ pub fn index_apps() {
                 icon: String::new(),
                 search_type: String::from("file"),
             };
+            println!(
+                "{} {} {} {}",
+                data.name, data.path, data.icon, data.search_type
+            );
 
             insert_db(&db, &data);
+
+            println!("Inserted data: {}", data.name);
         }
     }
 }
@@ -157,6 +163,12 @@ fn list_installed_apps(query: &str, db: &Connection) -> Result<SearchResponse> {
         .into_iter()
         .map(|row| row.unwrap())
     {
+        println!(
+            "{} {} {}",
+            row.read::<&str, _>("name"),
+            row.read::<&str, _>("path"),
+            row.read::<&str, _>("search_type")
+        );
         let row_result = SearchResults {
             name: String::from(row.read::<&str, _>("name")),
             path: String::from(row.read::<&str, _>("path")),
@@ -170,6 +182,7 @@ fn list_installed_apps(query: &str, db: &Connection) -> Result<SearchResponse> {
 
     for file in files {
         let file_name = file.path.split("\\").last().unwrap();
+        println!("{} {} {} {}", file.name, file.path, file.icon, file.search_type);
 
         if file_name.to_lowercase().contains(&query.to_lowercase()) {
             matches += 1;

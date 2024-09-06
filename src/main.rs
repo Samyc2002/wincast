@@ -12,7 +12,8 @@ use ratatui::{
 };
 use std::{error::Error, io};
 use ui::ui;
-use utils::launch;
+use utils::{index, launch};
+use wincast::search;
 
 pub mod app;
 pub mod ui;

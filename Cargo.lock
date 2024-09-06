@@ -623,6 +623,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "derive-try-from-primitive"
+version = "1.0.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "302ccf094df1151173bb6f5a2282fcd2f45accd5eae1bdf82dcbfefbc501ad5c"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 1.0.109",
+]
+
+[[package]]
 name = "dirs-next"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2474,6 +2485,17 @@ dependencies = [
  "systemicons",
  "walkdir",
  "whoami",
+ "windows-drives",
+]
+
+[[package]]
+name = "windows-drives"
+version = "0.5.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "60cf3fce9945bd1348ea2732993324b360fb278090094d71c7bb6c5e6ea4c74b"
+dependencies = [
+ "derive-try-from-primitive",
+ "winapi",
 ]
 
 [[package]]
