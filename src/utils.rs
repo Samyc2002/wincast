@@ -2,14 +2,21 @@ use std::io;
 
 use prettytable::{color, format, row, Attr, Cell, Row, Table};
 
-use crate::wincast::{self, searchresponse::SearchResponse, searchresults::SearchResults};
+use crate::wincast::{self, search, searchresponse::SearchResponse, searchresults::SearchResults};
 
 pub fn index() {
-    println!("Indexing apps...");
+    // println!("Indexing apps...");
 
     wincast::index_apps();
 
-    println!("Indexing complete");
+    // println!("Indexing complete");
+}
+
+pub fn show_data() {
+    println!("Showing data...");
+    let results = search("").unwrap();
+
+    print_search_results(results);
 }
 
 pub fn print_search_results(results: SearchResponse) -> Vec<SearchResults> {

@@ -1,5 +1,6 @@
 use super::searchresults::SearchResults;
 
+#[derive(Debug, Default, Clone)]
 pub struct SearchResponse {
     pub search_results: Vec<SearchResults>,
     pub total: i32,

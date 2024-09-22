@@ -1,65 +1,42 @@
 # Wincast
 
-A simple CLI tool built with rust for windows system wide search.
+A simple TUI tool built with rust for windows system wide search.
 This is similar to spotlight or raycast in MacOS, but for Windows.
 This uses a local `db.sqlite` file to store the data, so there is no concern about data theft.
 
+## Table of Contents
+
+- [Installation](#installation)
+- [Usage](#usage)
+- [Features](#features)
+- [Issues and Suggestions](#issues-and-suggestions)
+
+## Installation
+
+To install using cargo:
+
+```pwsh
+$ cargo install wincast
+```
+
+To compile from source:
+
+```pwsh
+$ git clone https://github.com/Samyc2002/wincast
+$ cd wincast
+$ cargo build --release
+```
+
+For complied binary, please check the [releases page](https://github.com/Samyc2002/wincast/releases)
+
 ## Usage
 
-For help text:
+Using the tool is simple. Just run the `wincast` command and you're good to go.
 
 
 ```pwsh
-$ wincast --help
-
-Usage: wincast.exe [OPTIONS]
-
-Options:
-  -q, --query <QUERY>  [default: ]
-  -i, --index
-  -h, --help           Print help
-  -V, --version        Print version
+$ wincast
 ```
-
-To index the apps and files:
-
-```pwsh
-$ wincast --index
-
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓███████▓▒░   ░▒▓██████▓▒░   ░▒▓██████▓▒░   ░▒▓███████▓▒░ ░▒▓████████▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓████████▓▒░  ░▒▓██████▓▒░     ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░
-░▒▓█████████████▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓███████▓▒░     ░▒▓█▓▒░
-
-Indexing apps...
-Indexing complete
-```
-
-To search the apps and files:
-
-```pwsh
-$ wincast --query Youtube
-
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓███████▓▒░   ░▒▓██████▓▒░   ░▒▓██████▓▒░   ░▒▓███████▓▒░ ░▒▓████████▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░           ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓████████▓▒░  ░▒▓██████▓▒░     ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░        ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░
-▒▓█▓▒░░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░        ░▒▓█▓▒░    ░▒▓█▓▒░
-░▒▓█████████████▓▒░  ░▒▓█▓▒░ ░▒▓█▓▒░░▒▓█▓▒░  ░▒▓██████▓▒░  ░▒▓█▓▒░░▒▓█▓▒░ ░▒▓███████▓▒░     ░▒▓█▓▒░
-
-Matches found: 2/405
-
-  ID   NAME            TYPE   PATH
-  1    YouTube         app    [_path_to_Youtube_]
-  2    YouTube Music   app    [_path_to_Youtube_Music_]
-Enter ID to launch:
-```
-
-Entering the number under the ID column will launch the corresponding app.
 
 ## Features
 
@@ -71,9 +48,9 @@ Entering the number under the ID column will launch the corresponding app.
 - Search
     - System wide (present)
     - Google Drive (in progress)
-    - Google (in progress)
-    - Youtube (in progress)
-    - YouTube Music (in progress)
+    - Google (present)
+    - Youtube (present)
+    - YouTube Music (present)
     - Google Maps (in progress)
 
 ## Issues and Suggestions

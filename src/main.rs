@@ -1,8 +1,10 @@
 use anyhow::Result;
-use app::{App, CurrentScreen};
+use app::{App, Tab};
 use clap::Parser;
 use crossterm::{
-    event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind},
+    event::{
+        self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode, KeyEventKind, KeyModifiers,
+    },
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
@@ -13,6 +15,7 @@ use ratatui::{
 use std::{error::Error, io};
 use ui::ui;
 use utils::launch;
+use wincast::index_apps;
 
 pub mod app;
 pub mod ui;
@@ -65,67 +68,125 @@ fn run_app<'a, B: Backend>(terminal: &mut Terminal<B>, app: &'a mut App<'a>) -> 
                 continue;
             }
 
-            match app.current_screen {
-                CurrentScreen::Search => match key.code {
-                    KeyCode::Esc => {
-                        return Ok(());
+            if key.modifiers.contains(KeyModifiers::CONTROL) {
+                // Syncronize/Indexing
+                if key.code == KeyCode::Char('s') {
+                    app.add_message("Indexing Apps");
+                    let app_count = index_apps();
+                    app.add_message(format!("Indexed {app_count} apps").as_str());
+                    /* Indexing files and folders logic
+                        app.add_message("Indexing Files and Folders");
+                        let file_count = index_files();
+                        app.add_message(
+                            format!("Indexed {file_count} files and folders in total").as_str(),
+                        );
+                    */
+                }
+                // Switch to Apps
+                if key.code == KeyCode::Char('1') {
+                    app.active_tab = Tab::Apps;
+                }
+                // Switch to Messages
+                if key.code == KeyCode::Char('2') {
+                    app.active_tab = Tab::Messages;
+                }
+                // Open in google
+                if key.code == KeyCode::Char('g') {
+                    if app.search_query.len() > 0 {
+                        app.add_message(
+                            &format!("Searching for {} on Google", app.search_query)[..],
+                        );
+                        launch(format!(
+                            "https://www.google.com/search?q={}",
+                            app.search_query.replace(" ", "+")
+                        ));
                     }
-                    KeyCode::Char(ch) => {
+                }
+                // Open in YouTube
+                if key.code == KeyCode::Char('y') {
+                    if app.search_query.len() > 0 {
+                        app.add_message(
+                            &format!("Searching for {} on YouTube", app.search_query)[..],
+                        );
+                        launch(format!(
+                            "https://www.youtube.com/results?search_query={}",
+                            app.search_query.replace(" ", "+")
+                        ));
+                    }
+                }
+                // Open in YouTube Music
+                if key.code == KeyCode::Char('m') {
+                    if app.search_query.len() > 0 {
+                        app.add_message(
+                            &format!("Searching for {} on YouTube Music", app.search_query)[..],
+                        );
+                        launch(format!(
+                            "https://music.youtube.com/search?q={}",
+                            app.search_query.replace(" ", "+")
+                        ));
+                    }
+                }
+                continue;
+            }
+
+            match key.code {
+                KeyCode::Esc => {
+                    return Ok(());
+                }
+                KeyCode::Char(ch) => {
+                    if app.active_tab == Tab::Apps {
                         app.search_query.push(ch);
                         app.search(app.search_query.clone())?;
                     }
-                    KeyCode::Backspace => {
+                }
+                KeyCode::Backspace => {
+                    if app.active_tab == Tab::Apps {
                         app.search_query.pop();
                         app.search(app.search_query.clone())?;
                     }
-                    KeyCode::Enter => {
+                }
+                KeyCode::Enter => {
+                    if app.active_tab == Tab::Apps {
                         if let Some(selected_item) = app.selected_item {
                             launch(selected_item.path.clone());
                         }
-                        match &app.selected_id {
-                            Some(selected_id) => {
-                                launch(
-                                    app.search_results
-                                        .search_results
-                                        .get(*selected_id)
-                                        .unwrap()
-                                        .path
-                                        .clone(),
-                                );
-                                return Ok(());
-                            }
-                            None => {}
+                        if let Some(selected_id) = &app.selected_id {
+                            launch(
+                                app.search_results
+                                    .search_results
+                                    .get(*selected_id)
+                                    .unwrap()
+                                    .path
+                                    .clone(),
+                            );
+                            return Ok(());
                         };
                     }
-                    KeyCode::Up => {
-                        match &app.selected_id {
-                            Some(selected_id) => {
-                                if *selected_id > 0 {
-                                    app.selected_id = Some(selected_id - 1);
-                                }
+                }
+                KeyCode::Up => {
+                    if app.active_tab == Tab::Apps {
+                        if let Some(selected_id) = &app.selected_id {
+                            if *selected_id > 0 {
+                                app.selected_id = Some(selected_id - 1);
+                                app.scroll.scroll_up();
                             }
-                            None => {
-                                app.selected_id = Some(app.search_results.search_results.len() - 1);
-                            }
-                        };
+                        } else {
+                            app.selected_id = Some(0);
+                        }
                     }
-                    KeyCode::Down => {
+                }
+                KeyCode::Down => {
+                    if app.active_tab == Tab::Apps {
                         if let Some(selected_id) = &app.selected_id {
                             if *selected_id < app.search_results.search_results.len() - 1 {
+                                app.scroll.scroll_down();
                                 app.selected_id = Some(selected_id + 1);
                             }
                         } else {
                             app.selected_id = Some(0);
                         }
                     }
-                    _ => {}
-                },
-                CurrentScreen::Home => match key.code {
-                    KeyCode::Esc => {
-                        return Ok(());
-                    }
-                    _ => {}
-                },
+                }
                 _ => {}
             }
         }
