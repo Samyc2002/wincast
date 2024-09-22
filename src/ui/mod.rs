@@ -1,3 +1,4 @@
+use constants::{get_controls, Control};
 use ratatui::{
     layout::{Constraint, Direction, Flex, Layout, Rect, Size},
     style::{Color, Style, Stylize},
@@ -9,6 +10,8 @@ use ratatui::{
 use tui_scrollview::ScrollView;
 
 use crate::app::{App, Tab};
+
+pub mod constants;
 
 pub struct FArea {
     height: u16,
@@ -22,7 +25,7 @@ pub fn get_frame_area() -> Rect {
 pub fn get_search_area() -> FArea {
     let area = FArea {
         height: 40,
-        width: 130,
+        width: 150,
     };
     return area;
 }
@@ -35,6 +38,10 @@ pub fn get_tab_index(tab: Tab) -> usize {
     } else {
         return 0;
     }
+}
+
+fn get_total_control_len(control: &Control) -> u16 {
+    return control.key.len() as u16 + control.description.len() as u16 + 4;
 }
 
 pub fn center(area: Rect, horizontal: Constraint, vertical: Constraint) -> Rect {
@@ -63,7 +70,7 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Constraint::Length(1),
             Constraint::Length(1),
             Constraint::Length(get_search_area().height),
-            Constraint::Length(0),
+            Constraint::Length(1),
         ])
         .split(center(
             frame.area(),
@@ -71,17 +78,15 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
             Constraint::Percentage(80),
         ));
 
-    let search_block = Block::default()
-        .borders(Borders::NONE)
-        .style(Style::default());
+    let search_block = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Length(8), Constraint::Min(1)])
+        .split(chunks[0]);
+    let search_title = Text::styled(format!("Search:"), Style::default().fg(Color::Blue));
+    let search = Text::styled(app.search_query.clone(), Style::default());
 
-    let search = Paragraph::new(Text::styled(
-        format!("Search: {}", &app.search_query.clone()),
-        Style::default(),
-    ))
-    .block(search_block);
-
-    frame.render_widget(search, chunks[0]);
+    frame.render_widget(search_title, search_block[0]);
+    frame.render_widget(search, search_block[1]);
 
     let tab_data = vec!["Apps", "Messages"];
 
@@ -134,5 +139,52 @@ pub fn ui(frame: &mut Frame, app: &mut App) {
     } else if app.active_tab == Tab::Messages {
         let messages = Paragraph::new(app.messages.join("\n"));
         frame.render_widget(messages, chunks[2]);
+    }
+
+    let bottom_bar = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints([Constraint::Length(9), Constraint::Min(1)])
+        .split(chunks[3]);
+
+    let controls = get_controls();
+
+    let control_space = Layout::default()
+        .direction(Direction::Horizontal)
+        .constraints(
+            controls
+                .iter()
+                .map(|c| Constraint::Length(get_total_control_len(c)))
+                .collect::<Vec<_>>(),
+        )
+        .split(center(
+            bottom_bar[1],
+            Constraint::Percentage(95),
+            Constraint::Percentage(100),
+        ));
+
+    let bottom_title = Paragraph::new(" Wincast ")
+        .block(Block::default().style(Style::default().bg(Color::DarkGray)));
+    frame.render_widget(bottom_title, bottom_bar[0]);
+
+    for (i, control) in controls.iter().enumerate() {
+        let control_key = Text::styled(
+            format!("{} ", control.key.clone()),
+            Style::default().fg(Color::Yellow),
+        );
+        let control_desc = Text::styled(
+            format!(" {}", control.description.clone()),
+            Style::default().fg(Color::White),
+        );
+
+        let control_block = Layout::default()
+            .direction(Direction::Horizontal)
+            .constraints([
+                Constraint::Length(control.key.len() as u16 + 1),
+                Constraint::Length(control.description.len() as u16 + 1),
+            ])
+            .split(control_space[i]);
+
+        frame.render_widget(control_key, control_block[0]);
+        frame.render_widget(control_desc, control_block[1]);
     }
 }
