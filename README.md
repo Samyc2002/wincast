@@ -38,6 +38,8 @@ Using the tool is simple. Just run the `wincast` command and you're good to go.
 $ wincast
 ```
 
+*NOTE*: Please make sure to syncronize to index the apps before using the tool. To do so, use the `wincast` command to start the tool and hit `<Ctrl>+s` to syncronize.
+
 ## Features
 
 - Indexing
