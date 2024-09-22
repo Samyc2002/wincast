@@ -1,3 +1,4 @@
+#[derive(Debug, Default, Clone)]
 pub struct SearchResults {
     pub name: String,
     pub path: String,

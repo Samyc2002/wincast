@@ -1,7 +1,7 @@
 use std::process::Command;
 
 use anyhow::Result;
-use sqlite::{Connection, Value};
+use sqlite::Connection;
 use walkdir::WalkDir;
 
 pub mod searchresponse;
@@ -10,18 +10,15 @@ pub mod searchresults;
 use searchresponse::SearchResponse;
 use searchresults::SearchResults;
 
-fn insert_db(db: &Connection, data: &SearchResults) {
-    db.prepare("INSERT INTO data VALUES (:name, :path, :icon, :type)")
-        .unwrap()
-        .bind::<&[(_, Value)]>(
-            &[
-                (":name", data.name.clone().into()),
-                (":path", data.path.clone().into()),
-                (":icon", data.icon.clone().into()),
-                (":type", data.search_type.clone().into()),
-            ][..],
-        )
-        .unwrap();
+fn insert_db(db: &Connection, data: &SearchResults, insert_type: &str) {
+    db.execute(format!(
+        "INSERT INTO {insert_type}_data VALUES ('{}', '{}', '{}', '{}')",
+        data.name.clone().replace("'", "\""),
+        data.path.clone().replace("'", "\""),
+        data.icon.clone().replace("'", "\""),
+        data.search_type.clone()
+    ))
+    .unwrap();
 }
 
 fn get_app_paths() -> Vec<String> {
@@ -58,16 +55,18 @@ pub fn add_file_path(file_path: &str, label: Option<&str>) {
     }
 }
 
-pub fn index_apps() {
+pub fn index_apps() -> u16 {
     let db = sqlite::open("./db.sqlite").unwrap();
 
     let app_paths = get_app_paths();
 
-    db.execute("DROP TABLE IF EXISTS data").unwrap();
+    db.execute("DROP TABLE IF EXISTS app_data").unwrap();
     db.execute(
-        "CREATE TABLE IF NOT EXISTS data (name TEXT, path TEXT, icon TEXT, search_type TEXT)",
+        "CREATE TABLE IF NOT EXISTS app_data (name TEXT, path TEXT, icon TEXT, search_type TEXT)",
     )
     .unwrap();
+
+    let mut app_count = 0;
 
     for path in app_paths {
         for file in WalkDir::new(path).into_iter().filter_map(|file| file.ok()) {
@@ -79,14 +78,25 @@ pub fn index_apps() {
                 search_type: String::from("app"),
             };
 
-            insert_db(&db, &data);
+            insert_db(&db, &data, "app");
+
+            app_count += 1;
         }
     }
 
-    let mut excluded_paths = get_app_paths();
-    excluded_paths.push(String::from(
-        "C:\\OEM\\Preload\\Autorun\\GUI\\Acer User's Manual",
-    ));
+    return app_count;
+}
+
+pub fn index_files() -> usize {
+    let db = sqlite::open("./db.sqlite").unwrap();
+
+    db.execute("DROP TABLE IF EXISTS file_data").unwrap();
+    db.execute(
+        "CREATE TABLE IF NOT EXISTS file_data (name TEXT, path TEXT, icon TEXT, search_type TEXT)",
+    )
+    .unwrap();
+
+    let excluded_paths = get_app_paths();
 
     let drive_output = if cfg!(target_os = "windows") {
         Command::new("cmd")
@@ -117,12 +127,24 @@ pub fn index_apps() {
         }
     }
 
+    let mut file_count = 0;
+
     for path in drive_labels {
         for file in WalkDir::new(path).into_iter().filter_map(|file| file.ok()) {
             let file_path = file.path().display().to_string();
-            if excluded_paths.contains(&file_path) {
+
+            // Not scanning apps again
+            let mut excluded = false;
+            for path in excluded_paths.iter() {
+                if file_path.starts_with(path) {
+                    excluded = true;
+                    break;
+                }
+            }
+            if excluded {
                 continue;
             }
+
             let data = SearchResults {
                 name: file.file_name().to_string_lossy().to_string(),
                 path: file_path.to_string(),
@@ -130,26 +152,36 @@ pub fn index_apps() {
                 search_type: String::from("file"),
             };
 
-            insert_db(&db, &data);
+            insert_db(&db, &data, "file");
+
+            file_count += 1;
         }
     }
+
+    return file_count;
 }
 
 pub fn search(query: &str) -> Result<SearchResponse> {
     let db = sqlite::open("./db.sqlite").unwrap();
 
     // List Installed Apps
-    let apps = list_installed_apps(query, &db)?;
+    let apps = list_results(query, &db, "app")?;
+    // List Installed Files
+    // let files = list_results(query, &db, "file")?;
 
     return Ok(apps);
 }
 
-fn list_installed_apps(query: &str, db: &Connection) -> Result<SearchResponse> {
+fn list_results(query: &str, db: &Connection, result_type: &str) -> Result<SearchResponse> {
     let mut result = Vec::new();
     let mut matches = 0;
     let mut total = 0;
 
-    let db_query = format!("SELECT * FROM data");
+    db.execute(
+        format!("CREATE TABLE IF NOT EXISTS {result_type}_data (name TEXT, path TEXT, icon TEXT, search_type TEXT)"),
+    )
+    .unwrap();
+    let db_query = format!("SELECT * FROM {result_type}_data");
     let mut files: Vec<SearchResults> = Vec::new();
     for row in db
         .prepare(db_query)
