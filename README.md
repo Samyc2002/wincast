@@ -4,6 +4,8 @@ A simple TUI tool built with rust for windows system wide search.
 This is similar to spotlight or raycast in MacOS, but for Windows.
 This uses a local `db.sqlite` file to store the data, so there is no concern about data theft.
 
+![Demo](demo.gif)
+
 ## Table of Contents
 
 - [Installation](#installation)
