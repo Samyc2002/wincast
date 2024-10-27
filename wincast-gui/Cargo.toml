@@ -1,0 +1,11 @@
+[package]
+name = "wincast-gui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.91"
+iced = "0.13.0"
+opener = "0.7.2"
+walkdir = "2.5.0"
+whoami = "1.5.2"
